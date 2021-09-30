@@ -1,1 +1,5 @@
-function ousmane(){ console.log('Programming is so interestine')} ousmane();
+function ousmane(){ 
+console.log('Programming is so interestine')
+} 
+
+ousmane();
