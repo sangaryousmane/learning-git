@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: page_head(${pageTitle}, 'none')"></head>
+<body>
+
+<div class="container-fluid">
+    <div th:replace="navigation :: menu"></div>
+
+    <div>
+        <h2>Manage Category | [[${pageTitle}]]</h2>
+    </div>
+    <br/>
+    <form th:object="${category}" method="post" th:action="@{/categories/save}"
+          style="max-width: 700px; margin: 0 auto" enctype="multipart/form-data"
+          onsubmit="return checkUnique(this);">
+        <input type="hidden" th:field="*{id}"/>
+        <div class="border border-secondary rounded p-3">
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="name">Category Name:</label>
+                <div class="col-sm-8">
+                    <input type="text" class="form-control" th:field="*{name}" name="name"
+                           id="name" minlength="3" maxlength="128" required/>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="alias">Alias:</label>
+                <div class="col-sm-8">
+                    <input type="text" th:field="*{alias}" class="form-control" name="alias"
+                           id="alias" minlength="3" maxlength="65">
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label">Parent Category:</label>
+                <div class="col-sm-8">
+                    <select class="form-control" th:field="*{parent}">
+                        <option value="0">[No Parent]</option>
+
+                        <th:block th:each="cat : ${listCategories}">
+                            <option th:value="${cat.id}">[[${cat.name}]]</option>
+                        </th:block>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label">Image:</label>
+                <div class="col-sm-8">
+                    <input type="hidden" th:field="*{image}">
+                    <input type="file" name="fileImage" id="fileImage" accept="image/png, image/jpeg"
+                           class="mb-2" th:required="${category.imagePath==null}"/>
+
+                    <div class="mt-2">
+                        <img class="img-fluid" alt="Image Preview" id="thumbnail"
+                             th:src="@{${category.imagePath}}"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-sm-4 col-form-label">Enabled:</label>
+                <div class="col-sm-8">
+                    <input type="checkbox" th:field="*{enabled}" name="enabled"/>
+                </div>
+            </div>
+
+
+            <div class="text-center">
+                <input class="btn btn-primary m-3" type="submit" value="Save">
+                <input type="button" class="btn btn-secondary" value="Cancel" id="buttonCancel">
+            </div>
+        </div>
+    </form>
+
+    <div th:replace="modal_fragments :: modal_dialog"></div>
+    <div th:replace="fragments :: footer"></div>
+</div>
+
+<script type="text/javascript">
+    MAX_FILE_SIZE = 102400; // 100kb
+    moduleURL ="[[@{/categories}]]";
+
+    function checkUnique(form){
+      catId=$("#id").val();
+      catAlias=$("#alias").val();
+      catName=$("#name").val();
+
+      csrfValue=$("input[name='_csrf']").val();
+      url="[[@{/categories/check_unique}]]";
+      params={id: catId, name: catName, alias:catAlias, _csrf:csrfValue};
+
+      $.post(url, params, function(response){
+        if(response == "OK"){
+         form.submit();
+        }
+        else if(response == "DuplicateName"){
+         showWarningModal("There is already an existing category with the name: " + catName);
+        }
+        else if(response == "DuplicateAlias"){
+         showWarningModal("There is already an existing category with the alias: " + catAlias);
+        }
+        else{
+         showErrorModal("Sorry! The server has encountered an error");
+        }
+      }).fail(function(){
+       showErrorModal("Couldn't connect to the server");
+      });
+      return false;
+    };
+
+
+
+</script>
+<script th:src="@{/js/common_form.js}"></script>
+</body>
+</html>
